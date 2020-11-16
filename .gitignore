@@ -1,0 +1,6 @@
+project/target/
+project/build/target/
+project/project/target/
+spark/target/
+flink/target/
+target/
