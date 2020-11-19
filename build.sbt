@@ -15,6 +15,22 @@ lazy val spark = project
   )
 
 lazy val flink = project
+  .settings(
+    libraryDependencies += "org.apache.kafka" % "kafka-clients" % "2.6.0",
+    libraryDependencies ++= {
+      Seq(
+        "org.apache.flink"              %  "flink-java"                   % "1.11.2"       % "provided",
+        "org.apache.flink"              %  "flink-json"                   % "1.11.2"       % "provided",
+        "org.apache.flink"              %  "flink-table"                  % "1.11.2"       % "provided",
+        "org.apache.flink"              %  "flink-table-api-java"         % "1.11.2"       % "provided",
+        "org.apache.flink"              %% "flink-table-api-java-bridge"  % "1.11.2"       % "provided",
+        "org.apache.flink"              %%  "flink-streaming-java"        % "1.11.2"       % "provided",
+        "org.apache.flink"              %%  "flink-streaming-scala"       % "1.11.2"       % "provided",
+        "org.apache.flink"              %%  "flink-clients"               % "1.11.2"       % "provided",
+        "org.apache.flink"              %%  "flink-connector-kafka-0.11"  % "1.11.2"       % "provided",
+      )
+    }
+  )
 
 mergeStrategy in assembly ~= ( (old) => {
     case PathList("module-info.class" ) => MergeStrategy.discard
