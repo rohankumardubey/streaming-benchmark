@@ -7,10 +7,10 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.apache.spark.sql.streaming.StreamingQueryListener._
 
-object KafkaRead {
+object KafkaSchema {
   def main(args: Array[String]): Unit = {
     if (args.length < 3) {
-      System.err.println("Usage: KafkaRead <bootstrap-servers> " +
+      System.err.println("Usage: KafkaSchema <bootstrap-servers> " +
         "<subscribe-type> <topics> [<checkpoint-location>]")
       System.exit(1)
     }
@@ -21,7 +21,7 @@ object KafkaRead {
 
     val spark = SparkSession
       .builder
-      .appName("KafkaRead")
+      .appName("KafkaSchema")
       .getOrCreate()
 
     import spark.implicits._
@@ -45,6 +45,7 @@ object KafkaRead {
       .option("kafka.bootstrap.servers", bootstrapServers)
       .option(subscribeType, topics)
       .option("startingOffsets", "earliest")
+      .option("maxOffsetsPerTrigger", 10)
       .load()
       .selectExpr("CAST(value AS STRING) AS value")
       .select(schema_of_json(col("value")))
