@@ -38,20 +38,21 @@ public class KafkaRead {
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         tableEnv.connect(new Kafka()
-                .version("0.11")
+                .version("universal")
                 .topic(params.getRequired("read-topic"))
                 .property("bootstrap.servers", params.getRequired("bootstrap.servers")))
                 .withSchema(new Schema()
-                        .field("sensor", Types.STRING())
-                        .field("temp", Types.LONG())
-                        .field("ts", Types.SQL_TIMESTAMP())
-                        .rowtime(new Rowtime()
-                                .timestampsFromSource()
-                                .watermarksPeriodicBounded(1000)
-                        )
+                        .field("artist", Types.STRING())
+                        .field("auth", Types.STRING())
+                        .field("city", Types.STRING())
                 )
                 .withFormat(new Json().deriveSchema())
                 .inAppendMode()
                 .createTemporaryTable("sourceTopic");
+
+        String sql = "SELECT * from sourceTopic";
+        tableEnv.executeSql(sql).print();
+
+        env.execute("KafkaRead");
     }
 }

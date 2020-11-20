@@ -16,9 +16,9 @@ lazy val spark = project
 
 lazy val flink = project
   .settings(
-    libraryDependencies += "org.apache.kafka" % "kafka-clients" % "2.6.0",
     libraryDependencies ++= {
       Seq(
+        "org.apache.kafka"              %  "kafka-clients"                % "2.4.1"        % "provided",
         "org.apache.flink"              %  "flink-java"                   % "1.11.2"       % "provided",
         "org.apache.flink"              %  "flink-json"                   % "1.11.2"       % "provided",
         "org.apache.flink"              %  "flink-table"                  % "1.11.2"       % "provided",
