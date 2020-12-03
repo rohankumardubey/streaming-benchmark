@@ -31,27 +31,33 @@ public class KafkaRead {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 10000));
         env.enableCheckpointing(300000); // 300 seconds
-        env.getConfig().setGlobalJobParameters(params);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(1);
 
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
-        tableEnv.connect(new Kafka()
-                .version("universal")
-                .topic(params.getRequired("read-topic"))
-                .property("bootstrap.servers", params.getRequired("bootstrap.servers")))
-                .withSchema(new Schema()
-                        .field("artist", Types.STRING())
-                        .field("auth", Types.STRING())
-                        .field("city", Types.STRING())
-                )
-                .withFormat(new Json().deriveSchema())
-                .inAppendMode()
-                .createTemporaryTable("sourceTopic");
+        // Source Table.
+        String createSource = "CREATE TABLE sourceTopic (\n" +
+                "  `artist` STRING,\n" +
+                "  `auth` STRING,\n" +
+                "  `city` STRING\n" +
+                ") WITH (\n" +
+                "  'connector' = 'kafka',\n" +
+                "  'topic' = '" + params.getRequired("read-topic") + "',\n" +
+                "  'properties.bootstrap.servers' = '" + params.getRequired("bootstrap.servers") + "',\n" +
+                "  'properties.group.id' = '" + UUID.randomUUID().toString() + "',\n" +
+                "  'scan.startup.mode' = 'earliest-offset',\n" +
+                "  'format' = 'json'\n" +
+                ")";
+        tableEnv.executeSql(createSource);
 
-        String sql = "SELECT * from sourceTopic";
-        tableEnv.executeSql(sql).print();
+        // Target Table.
+        String createSink = "CREATE TABLE print_table (`artist` STRING, `c` BIGINT NOT NULL) " +
+                "WITH ('connector' = 'print') ";
+        tableEnv.executeSql(createSink);
+
+        String sql = "INSERT INTO print_table SELECT artist, count(*) AS c from sourceTopic WHERE artist <> '' GROUP BY artist";
+        tableEnv.executeSql(sql).collect();
 
         env.execute("KafkaRead");
     }
