@@ -18,8 +18,8 @@ public class KafkaRead {
     public static void main(String[] args) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        if (params.getNumberOfParameters() < 4) {
-            System.out.println("\nUsage: KafkaRead --read-topic <topic> --write-topic <topic> --bootstrap.servers <kafka brokers> --group.id <groupid>");
+        if (params.getNumberOfParameters() < 1) {
+            System.out.println("\nUsage: KafkaRead --bootstrap.servers <kafka brokers> --parallelism <parallelism>");
             return;
         }
 
@@ -32,31 +32,59 @@ public class KafkaRead {
         env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 10000));
         env.enableCheckpointing(300000); // 300 seconds
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-        env.setParallelism(1);
+        env.setParallelism(Integer.parseInt(params.getRequired("parallelism")));
 
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+        String groupId = UUID.randomUUID().toString();
 
-        // Source Table.
-        String createSource = "CREATE TABLE sourceTopic (\n" +
+        // Source Table 1.
+        String createSource1 = "CREATE TABLE sourceTopic1 (\n" +
+                "  `userId` BIGINT,\n " +
                 "  `artist` STRING,\n" +
                 "  `auth` STRING,\n" +
                 "  `city` STRING\n" +
                 ") WITH (\n" +
                 "  'connector' = 'kafka',\n" +
-                "  'topic' = '" + params.getRequired("read-topic") + "',\n" +
+                "  'topic' = 'page_view_events',\n" +
                 "  'properties.bootstrap.servers' = '" + params.getRequired("bootstrap.servers") + "',\n" +
-                "  'properties.group.id' = '" + UUID.randomUUID().toString() + "',\n" +
+                "  'properties.group.id' = '" + groupId + "',\n" +
                 "  'scan.startup.mode' = 'earliest-offset',\n" +
                 "  'format' = 'json'\n" +
                 ")";
-        tableEnv.executeSql(createSource);
+        tableEnv.executeSql(createSource1);
+
+        String createSource2 = "CREATE TABLE sourceTopic2 (\n" +
+                "  `userId` BIGINT,\n " +
+                "  `artist` STRING,\n" +
+                "  `auth` STRING,\n" +
+                "  `city` STRING\n" +
+                ") WITH (\n" +
+                "  'connector' = 'kafka',\n" +
+                "  'topic' = 'listen_events',\n" +
+                "  'properties.bootstrap.servers' = '" + params.getRequired("bootstrap.servers") + "',\n" +
+                "  'properties.group.id' = '" + groupId + "',\n" +
+                "  'scan.startup.mode' = 'latest-offset',\n" +
+                "  'format' = 'json'\n" +
+                ")";
+        tableEnv.executeSql(createSource2);
 
         // Target Table.
-        String createSink = "CREATE TABLE print_table (`artist` STRING, `c` BIGINT NOT NULL) " +
-                "WITH ('connector' = 'print') ";
+        String createSink = "CREATE TABLE targetTopic (\n" +
+                "  `userId` BIGINT,\n " +
+                "  `artist` STRING,\n" +
+                "  `auth` STRING,\n" +
+                "  `city` STRING\n" +
+                ") WITH (\n" +
+                "  'connector' = 'kafka',\n" +
+                "  'topic' = 'benchmark_test',\n" +
+                "  'properties.bootstrap.servers' = '" + params.getRequired("bootstrap.servers") + "',\n" +
+                "  'properties.group.id' = '" + groupId + "',\n" +
+                "  'scan.startup.mode' = 'latest-offset',\n" +
+                "  'format' = 'json'\n" +
+                ")";
         tableEnv.executeSql(createSink);
 
-        String sql = "INSERT INTO print_table SELECT artist, count(*) AS c from sourceTopic WHERE artist <> '' GROUP BY artist";
+        String sql = "INSERT INTO targetTopic SELECT a.userId, a.artist, a.auth, a.city from sourceTopic1 AS a JOIN sourceTopic2 AS b ON a.userId = b.userId AND a.artist = b.artist";
         tableEnv.executeSql(sql).collect();
 
         env.execute("KafkaRead");
