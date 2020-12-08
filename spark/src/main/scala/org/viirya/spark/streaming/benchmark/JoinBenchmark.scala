@@ -3,7 +3,7 @@ package org.viirya.spark.streaming.benchmark
 import java.util.UUID
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, from_json}
+import org.apache.spark.sql.functions.{col, from_json, to_json}
 import org.apache.spark.sql.streaming.StreamingQueryListener
 import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
 
@@ -52,6 +52,7 @@ object JoinBenchmark {
         DataSchema.listen_events_dt,
         Map.empty[String, String]).as("listen_events"))
 
+
     val page_view_events = spark
       .readStream
       .format("kafka")
@@ -67,12 +68,14 @@ object JoinBenchmark {
     val join = listen_events.join(page_view_events,
       $"listen_events.userId" === $"page_view_events.userId" &&
         $"listen_events.artist" === $"page_view_events.artist")
+      .select(to_json($"listen_events").as("value"))
 
     val query = join.writeStream
       .outputMode("append")
-      .format("console")
+      .format("kafka")
       .option("checkpointLocation", checkpointLocation)
-      .option("truncate", false)
+      .option("kafka.bootstrap.servers", bootstrapServers)
+      .option("topic", "benchmark_test")
       .start()
 
     query.awaitTermination()

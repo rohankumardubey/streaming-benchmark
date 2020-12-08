@@ -45,6 +45,7 @@ object KafkaRead {
       .option("kafka.bootstrap.servers", bootstrapServers)
       .option(subscribeType, topics)
       .option("startingOffsets", "earliest")
+      .option("failOnDataLoss", "false")
       .load()
       .selectExpr("CAST(value AS STRING) AS value")
       .select(schema_of_json(col("value")))

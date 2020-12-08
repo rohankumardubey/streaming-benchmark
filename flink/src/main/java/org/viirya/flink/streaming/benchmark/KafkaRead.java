@@ -30,7 +30,7 @@ public class KafkaRead {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 10000));
-        env.enableCheckpointing(300000); // 300 seconds
+        env.enableCheckpointing(3000000); // 3000 seconds
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(Integer.parseInt(params.getRequired("parallelism")));
 
@@ -39,25 +39,58 @@ public class KafkaRead {
 
         // Source Table 1.
         String createSource1 = "CREATE TABLE sourceTopic1 (\n" +
-                "  `userId` BIGINT,\n " +
                 "  `artist` STRING,\n" +
                 "  `auth` STRING,\n" +
-                "  `city` STRING\n" +
+                "  `city` STRING,\n" +
+                "  `duration` DOUBLE,\n" +
+                "  `firstName` STRING,\n" +
+                "  `gender` STRING,\n" +
+                "  `itemInSession` BIGINT,\n" +
+                "  `lastName` STRING,\n" +
+                "  `lat` DOUBLE,\n" +
+                "  `level` STRING,\n" +
+                "  `lon` DOUBLE,\n" +
+                "  `method` STRING,\n" +
+                "  `page` STRING,\n" +
+                "  `registration` BIGINT,\n" +
+                "  `sessionId` BIGINT,\n" +
+                "  `song` STRING,\n" +
+                "  `state` STRING,\n" +
+                "  `status` BIGINT,\n" +
+                "  `ts` BIGINT,\n" +
+                "  `userAgent` STRING,\n" +
+                "  `userId` BIGINT,\n" +
+                "  `zip` STRING\n" +
                 ") WITH (\n" +
                 "  'connector' = 'kafka',\n" +
                 "  'topic' = 'page_view_events',\n" +
                 "  'properties.bootstrap.servers' = '" + params.getRequired("bootstrap.servers") + "',\n" +
                 "  'properties.group.id' = '" + groupId + "',\n" +
-                "  'scan.startup.mode' = 'earliest-offset',\n" +
+                "  'scan.startup.mode' = 'latest-offset',\n" +
                 "  'format' = 'json'\n" +
                 ")";
         tableEnv.executeSql(createSource1);
 
         String createSource2 = "CREATE TABLE sourceTopic2 (\n" +
-                "  `userId` BIGINT,\n " +
                 "  `artist` STRING,\n" +
                 "  `auth` STRING,\n" +
-                "  `city` STRING\n" +
+                "  `city` STRING,\n" +
+                "  `duration` DOUBLE,\n" +
+                "  `firstName` STRING,\n" +
+                "  `gender` STRING,\n" +
+                "  `itemInSession` BIGINT,\n" +
+                "  `lastName` STRING,\n" +
+                "  `lat` DOUBLE,\n" +
+                "  `level` STRING,\n" +
+                "  `lon` DOUBLE,\n" +
+                "  `registration` BIGINT,\n" +
+                "  `sessionId` BIGINT,\n" +
+                "  `song` STRING,\n" +
+                "  `state` STRING,\n" +
+                "  `ts` BIGINT,\n" +
+                "  `userAgent` STRING,\n" +
+                "  `userId` BIGINT,\n" +
+                "  `zip` STRING\n" +
                 ") WITH (\n" +
                 "  'connector' = 'kafka',\n" +
                 "  'topic' = 'listen_events',\n" +
@@ -70,10 +103,28 @@ public class KafkaRead {
 
         // Target Table.
         String createSink = "CREATE TABLE targetTopic (\n" +
-                "  `userId` BIGINT,\n " +
                 "  `artist` STRING,\n" +
                 "  `auth` STRING,\n" +
-                "  `city` STRING\n" +
+                "  `city` STRING,\n" +
+                "  `duration` DOUBLE,\n" +
+                "  `firstName` STRING,\n" +
+                "  `gender` STRING,\n" +
+                "  `itemInSession` BIGINT,\n" +
+                "  `lastName` STRING,\n" +
+                "  `lat` DOUBLE,\n" +
+                "  `level` STRING,\n" +
+                "  `lon` DOUBLE,\n" +
+                "  `method` STRING,\n" +
+                "  `page` STRING,\n" +
+                "  `registration` BIGINT,\n" +
+                "  `sessionId` BIGINT,\n" +
+                "  `song` STRING,\n" +
+                "  `state` STRING,\n" +
+                "  `status` BIGINT,\n" +
+                "  `ts` BIGINT,\n" +
+                "  `userAgent` STRING,\n" +
+                "  `userId` BIGINT,\n" +
+                "  `zip` STRING\n" +
                 ") WITH (\n" +
                 "  'connector' = 'kafka',\n" +
                 "  'topic' = 'benchmark_test',\n" +
@@ -84,7 +135,7 @@ public class KafkaRead {
                 ")";
         tableEnv.executeSql(createSink);
 
-        String sql = "INSERT INTO targetTopic SELECT a.userId, a.artist, a.auth, a.city from sourceTopic1 AS a JOIN sourceTopic2 AS b ON a.userId = b.userId AND a.artist = b.artist";
+        String sql = "INSERT INTO targetTopic SELECT a.* from sourceTopic1 AS a JOIN sourceTopic2 AS b ON a.userId = b.userId AND a.artist = b.artist";
         tableEnv.executeSql(sql).collect();
 
         env.execute("KafkaRead");
