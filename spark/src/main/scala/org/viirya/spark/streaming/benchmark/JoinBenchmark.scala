@@ -30,7 +30,7 @@ object JoinBenchmark {
     }
 
     val checkpointLocation =
-      if (args.length > 1) args(1) else "/tmp/temporary-" + UUID.randomUUID.toString
+      if (args.length > 4) args(3) else "/tmp/temporary-" + UUID.randomUUID.toString
 
     val spark = SparkSession
       .builder
