@@ -19,15 +19,15 @@ lazy val flink = project
     libraryDependencies ++= {
       Seq(
         "org.apache.kafka"              %  "kafka-clients"                % "2.4.1"        % "provided",
-        "org.apache.flink"              %  "flink-java"                   % "1.11.2"       % "provided",
-        "org.apache.flink"              %  "flink-json"                   % "1.11.2"       % "provided",
-        "org.apache.flink"              %  "flink-table"                  % "1.11.2"       % "provided",
-        "org.apache.flink"              %  "flink-table-api-java"         % "1.11.2"       % "provided",
-        "org.apache.flink"              %% "flink-table-api-java-bridge"  % "1.11.2"       % "provided",
-        "org.apache.flink"              %%  "flink-streaming-java"        % "1.11.2"       % "provided",
-        "org.apache.flink"              %%  "flink-streaming-scala"       % "1.11.2"       % "provided",
-        "org.apache.flink"              %%  "flink-clients"               % "1.11.2"       % "provided",
-        "org.apache.flink"              %%  "flink-connector-kafka-0.11"  % "1.11.2"       % "provided",
+        "org.apache.flink"              %  "flink-java"                   % "1.12.1"       % "provided",
+        "org.apache.flink"              %  "flink-json"                   % "1.12.1"       % "provided",
+        "org.apache.flink"              %  "flink-table"                  % "1.12.1"       % "provided",
+        "org.apache.flink"              %  "flink-table-api-java"         % "1.12.1"       % "provided",
+        "org.apache.flink"              %% "flink-table-api-java-bridge"  % "1.12.1"       % "provided",
+        "org.apache.flink"              %%  "flink-streaming-java"        % "1.12.1"       % "provided",
+        "org.apache.flink"              %%  "flink-streaming-scala"       % "1.12.1"       % "provided",
+        "org.apache.flink"              %%  "flink-clients"               % "1.12.1"       % "provided",
+        "org.apache.flink"              %%  "flink-connector-kafka"       % "1.12.1"       % "provided",
       )
     }
   )
